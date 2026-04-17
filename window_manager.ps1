@@ -7,6 +7,10 @@
     Version: 2.3-fork-A
     Works on Windows 10/11 with PowerShell 5.1+
 #>
+param([switch]$I  = $false,
+    [switch]$ma = $false,
+    [string]$m  = "",
+    [string]$p  = "")
 
 # Load required Win32 API functions
 if (-not ("WindowUtils" -as [type])) {
@@ -132,99 +136,111 @@ function Set-WindowMaximize {
 }
 
 # Main execution loop
-while ($true) {
-    Clear-Host
-    Write-Host "==========================================" -ForegroundColor Cyan
-    Write-Host "           Welcome to WRP                " -ForegroundColor Green
-    Write-Host "   === Window Resizer & Positioner ===    " -ForegroundColor Cyan
-    Write-Host "==========================================" -ForegroundColor Cyan
-    Write-Host ""
-    Write-Host "Select a window to modify its size and position" -ForegroundColor Yellow
-    Write-Host ""
-    Write-Host "------------------------------------------" -ForegroundColor Magenta
+$interactive = $I
+$minimizeAll = $ma
 
-    $selectedWindow = Select-Window
-    if (-not $selectedWindow) {
-        Write-Host "`nExiting..." -ForegroundColor Yellow
-        break
-    }
-
-    $geometry = Get-WindowGeometry $selectedWindow
-
-    Write-Host ""
-    Write-Host "------------------------------------------"
-    Write-Host "Current Window Properties:"
-    Write-Host "  Position: ($($geometry.X), $($geometry.Y))"
-    Write-Host "  Size: $($geometry.Width)x$($geometry.Height)"
-    Write-Host "------------------------------------------"
-    Write-Host ""
-
-    # Listar presets dinamicamente
-    $presetNames = $presets.PSObject.Properties.Name
-    Write-Host "Choose action:"
-    Write-Host "[1] Enter custom properties"
-    for ($i = 0; $i -lt $presetNames.Count; $i++) {
-        Write-Host "[$($i+2)] Apply $($presetNames[$i]) preset"
-    }
-    Write-Host "[$([int]$presetNames.Count+2)] Maximize window"
-    Write-Host "[0] Back"
-
+if ($interactive) {
     while ($true) {
-        $maxOption = [int]$presetNames.Count + 2
-        $choice = Read-Host "`nSelect option (0-$maxOption)"
-        if ($choice -eq '0') { break }
-        if ($choice -eq '1') {
-            do {
-                $newX = Read-Host "Enter new X position [$($geometry.X)]"
-                if ([string]::IsNullOrEmpty($newX)) { $newX = $geometry.X }
-            } until ($newX -match "^-?\d+$")
+        Clear-Host
+        Write-Host "==========================================" -ForegroundColor Cyan
+        Write-Host "           Welcome to WRP                " -ForegroundColor Green
+        Write-Host "   === Window Resizer & Positioner ===    " -ForegroundColor Cyan
+        Write-Host "==========================================" -ForegroundColor Cyan
+        Write-Host ""
+        Write-Host "Select a window to modify its size and position" -ForegroundColor Yellow
+        Write-Host ""
+        Write-Host "------------------------------------------" -ForegroundColor Magenta
 
-            do {
-                $newY = Read-Host "Enter new Y position [$($geometry.Y)]"
-                if ([string]::IsNullOrEmpty($newY)) { $newY = $geometry.Y }
-            } until ($newY -match "^-?\d+$")
-
-            do {
-                $newWidth = Read-Host "Enter new width [$($geometry.Width)]"
-                if ([string]::IsNullOrEmpty($newWidth)) { $newWidth = $geometry.Width }
-            } until ($newWidth -match "^\d+$" -and [int]$newWidth -gt 0)
-
-            do {
-                $newHeight = Read-Host "Enter new height [$($geometry.Height)]"
-                if ([string]::IsNullOrEmpty($newHeight)) { $newHeight = $geometry.Height }
-            } until ($newHeight -match "^\d+$" -and [int]$newHeight -gt 0)
+        $selectedWindow = Select-Window
+        if (-not $selectedWindow) {
+            Write-Host "`nExiting..." -ForegroundColor Yellow
+            break
         }
-        elseif ($choice -match "^\d+$" -and [int]$choice -ge 2 -and [int]$choice -le ($presetNames.Count+1)) {
-            $presetIndex = [int]$choice - 2
-            $presetName = $presetNames[$presetIndex]
-            $preset = $presets.$presetName
-            $newX = $preset.x
-            $newY = $preset.y
-            $newWidth = $preset.width
-            $newHeight = $preset.height
+
+        $geometry = Get-WindowGeometry $selectedWindow
+
+        Write-Host ""
+        Write-Host "------------------------------------------"
+        Write-Host "Current Window Properties:"
+        Write-Host "  Position: ($($geometry.X), $($geometry.Y))"
+        Write-Host "  Size: $($geometry.Width)x$($geometry.Height)"
+        Write-Host "------------------------------------------"
+        Write-Host ""
+
+        # Listar presets dinamicamente
+        $presetNames = $presets.PSObject.Properties.Name
+        Write-Host "Choose action:"
+        Write-Host "[1] Enter custom properties"
+        for ($i = 0; $i -lt $presetNames.Count; $i++) {
+            Write-Host "[$($i+2)] Apply $($presetNames[$i]) preset"
         }
-        elseif ($choice -eq "$maxOption") {
-            Set-WindowMaximize $selectedWindow
-            Write-Host "`nWindow maximized!" -ForegroundColor Green
+        Write-Host "[$([int]$presetNames.Count+2)] Maximize window"
+        Write-Host "[0] Back"
+
+        while ($true) {
+            $maxOption = [int]$presetNames.Count + 2
+            $choice = Read-Host "`nSelect option (0-$maxOption)"
+            if ($choice -eq '0') { break }
+            if ($choice -eq '1') {
+                do {
+                    $newX = Read-Host "Enter new X position [$($geometry.X)]"
+                    if ([string]::IsNullOrEmpty($newX)) { $newX = $geometry.X }
+                } until ($newX -match "^-?\d+$")
+
+                do {
+                    $newY = Read-Host "Enter new Y position [$($geometry.Y)]"
+                    if ([string]::IsNullOrEmpty($newY)) { $newY = $geometry.Y }
+                } until ($newY -match "^-?\d+$")
+
+                do {
+                    $newWidth = Read-Host "Enter new width [$($geometry.Width)]"
+                    if ([string]::IsNullOrEmpty($newWidth)) { $newWidth = $geometry.Width }
+                } until ($newWidth -match "^\d+$" -and [int]$newWidth -gt 0)
+
+                do {
+                    $newHeight = Read-Host "Enter new height [$($geometry.Height)]"
+                    if ([string]::IsNullOrEmpty($newHeight)) { $newHeight = $geometry.Height }
+                } until ($newHeight -match "^\d+$" -and [int]$newHeight -gt 0)
+            }
+            elseif ($choice -match "^\d+$" -and [int]$choice -ge 2 -and [int]$choice -le ($presetNames.Count+1)) {
+                $presetIndex = [int]$choice - 2
+                $presetName = $presetNames[$presetIndex]
+                $preset = $presets.$presetName
+                $newX = $preset.x
+                $newY = $preset.y
+                $newWidth = $preset.width
+                $newHeight = $preset.height
+            }
+            elseif ($choice -eq "$maxOption") {
+                Set-WindowMaximize $selectedWindow
+                Write-Host "`nWindow maximized!" -ForegroundColor Green
+                Write-Host "`nPress Enter to continue..."
+                [void][System.Console]::ReadLine()
+                break
+            }
+            else {
+                continue
+            }
+
+            Write-Host "`nApplying changes..."
+            if (Set-WindowGeometry $selectedWindow $newX $newY $newWidth $newHeight) {
+                Write-Host "Window successfully resized and repositioned!" -ForegroundColor Green
+
+                $newGeometry = Get-WindowGeometry $selectedWindow
+                Write-Host "`nNew Window Properties:"
+                Write-Host "  Position: ($($newGeometry.X), $($newGeometry.Y))"
+                Write-Host "  Size: $($newGeometry.Width)x$($newGeometry.Height)"
+            }
             Write-Host "`nPress Enter to continue..."
             [void][System.Console]::ReadLine()
             break
         }
-        else {
-            continue
-        }
-
-        Write-Host "`nApplying changes..."
-        if (Set-WindowGeometry $selectedWindow $newX $newY $newWidth $newHeight) {
-            Write-Host "Window successfully resized and repositioned!" -ForegroundColor Green
-
-            $newGeometry = Get-WindowGeometry $selectedWindow
-            Write-Host "`nNew Window Properties:"
-            Write-Host "  Position: ($($newGeometry.X), $($newGeometry.Y))"
-            Write-Host "  Size: $($newGeometry.Width)x$($newGeometry.Height)"
-        }
-        Write-Host "`nPress Enter to continue..."
-        [void][System.Console]::ReadLine()
-        break
     }
 }
+
+else {
+   if ($minimizeAll) {
+       Minimize-All
+   } 
+}
+
