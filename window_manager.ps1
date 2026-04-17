@@ -1,10 +1,10 @@
 <#
 .SYNOPSIS
-    Interactive Window Resizer and Positioner with Default Presets
+    CLI Window Resizer and Positioner with Default Presets
 .DESCRIPTION
     Allows selecting any open window and modifying its size/position on screen
 .NOTES
-    Version: 2.3
+    Version: 2.3-fork-A
     Works on Windows 10/11 with PowerShell 5.1+
 #>
 
@@ -75,6 +75,25 @@ function Select-Window {
     }
 }
 
+# Função para minimizar todas as janelas
+function Minimize-All {
+    $windows = @()
+    Get-Process | Where-Object { $_.MainWindowHandle -ne [IntPtr]::Zero -and $_.MainWindowTitle } | ForEach-Object {
+        $windows += [PSCustomObject]@{
+            ID = $_.Id
+            Title = $_.MainWindowTitle
+            Handle = $_.MainWindowHandle
+            Process = $_.Name
+        }
+    }
+
+    #while ($true) {
+    for ($i = 0; $i -lt $windows.Count; $i++) {
+        #Write-Host "[$($i+1)] [$($windows[$i].Process)] $($windows[$i].Title)"
+        [WindowUtils]::ShowWindow($windows[$i].Handle, 7)
+    }
+}
+
 function Get-WindowGeometry {
     param($window)
     
@@ -108,6 +127,7 @@ function Set-WindowGeometry {
 function Set-WindowMaximize {
     param($window)
     # Use SW_SHOWMAXIMIZED (3) only, sem SW_RESTORE antes, pois SW_RESTORE pode causar problemas em algumas janelas
+    Minimize-All
     [WindowUtils]::ShowWindow($window.Handle, [WindowUtils]::SW_MAXIMIZE) | Out-Null
 }
 
