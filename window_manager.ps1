@@ -7,7 +7,7 @@
     Version: 2.3-fork-A
     Works on Windows 10/11 with PowerShell 5.1+
 #>
-param([switch]$I  = $false,
+param([switch]$in  = $false,
     [switch]$ma = $false,
     [string]$m  = "",
     [string]$p  = "")
@@ -136,7 +136,7 @@ function Set-WindowMaximize {
 }
 
 # Main execution loop
-$interactive = $I
+$interactive = $in
 $minimizeAll = $ma
 
 if ($interactive) {
